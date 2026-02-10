@@ -1,30 +1,50 @@
 import React, { useState } from "react";
 import "./Login.css";
-import Adminpanel from "./Adminpanel";
+import { useNavigate } from "react-router-dom";
+import api from "../api";
+import { useAuth } from "../auth/AuthProvider";
 
 function Login() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     let formErrors = {};
-    if (!usernameOrEmail.trim()) formErrors.usernameOrEmail = "Username or Email is required";
+    if (!usernameOrEmail.trim()) formErrors.usernameOrEmail = "Username is required";
     if (!password.trim()) formErrors.password = "Password is required";
 
     setErrors(formErrors);
+    if (Object.keys(formErrors).length !== 0) return;
 
-    if (Object.keys(formErrors).length === 0) {
-      setIsLoggedIn(true);
+    try {
+      setLoading(true);
+
+      const res = await api.post("/login", {
+        userName: usernameOrEmail,
+        password: password
+      });
+
+      // store jwt
+      login(res.data.token);
+
+      // redirect to protected route
+      navigate("/admin");
+
+    } catch (err) {
+      setErrors({
+        api: err.response?.data?.message || "Invalid username or password"
+      });
+    } finally {
+      setLoading(false);
     }
   };
-
-  if (isLoggedIn) {
-    return <Adminpanel />;
-  }
 
   return (
     <div className="login-container">
@@ -33,10 +53,10 @@ function Login() {
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="input-group">
-            <label>Email</label>
+            <label>Username</label>
             <input
               type="text"
-              placeholder="Enter email"
+              placeholder="Enter username"
               value={usernameOrEmail}
               onChange={(e) => setUsernameOrEmail(e.target.value)}
             />
@@ -54,12 +74,11 @@ function Login() {
             {errors.password && <span className="error">{errors.password}</span>}
           </div>
 
-          <button type="submit" className="login-btn">
-            Login
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
 
-          {/* <p className="forgot-password">Forgot Password?</p> */}
-
+          {errors.api && <span className="error">{errors.api}</span>}
         </form>
       </div>
     </div>

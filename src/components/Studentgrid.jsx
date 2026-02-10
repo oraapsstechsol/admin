@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import axios from "axios"
-let url = "http://localhost:3000/admin/registration/1"
+import api from "../api";
+let url = "admin/registration/1"
 
 const columns = [
   // { field: "id", headerName: "ID", width: 90 },
@@ -15,14 +15,38 @@ const columns = [
 
 function Studentgrid() {
   let [student,setStudent]=useState([])
-  let fetchstudents = async()=>{
-    let data = await axios.get(url)
-    setStudent(data?.data?.data?.map((item,index)=>{
-            return {...item,id:index +1}
-        }) || [])
-  }
-  
-  useEffect(()=>{fetchstudents()},[])
+  useEffect(() => {
+  let ignore = false;
+
+  const fetchstudents = async () => {
+    try {
+      const { data } = await api.get(url, {
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+      },
+    });
+
+      if (!ignore) {
+        setStudent(
+          data?.data?.map((item, index) => ({
+            ...item,
+            id: index + 1,
+          })) || []
+        );
+      }
+    } catch (err) {
+      if (!ignore) {
+        console.error(err);
+      }
+    }
+  };
+
+  fetchstudents();
+
+  return () => {
+    ignore = true;
+  };
+}, []);
 
   return (
     <div style={{ background: "#fff", padding: 16, borderRadius: 10 }}>
