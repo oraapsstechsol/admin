@@ -44,13 +44,12 @@ function Studentgrid() {
   // ✅ Delete Handler
   const handleDelete = async (row) => {
     try {
-      await api.delete(`admin/registration/${row.id}`, {
+      await api.delete(`admin/registration/${row._id}`, {
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
       });
 
-      // Remove deleted row from state
       setStudent((prev) => prev.filter((item) => item.id !== row.id));
     } catch (error) {
       console.error("Delete failed:", error);

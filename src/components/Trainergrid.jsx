@@ -23,9 +23,9 @@ function Trainergrid() {
 
         if (!ignore) {
           setTrainer(
-            data?.data?.map((item) => ({
+            data?.data?.map((item,index) => ({
               ...item,
-              id: item.id, // ✅ Use real backend ID (IMPORTANT)
+              id: index + 1, // ✅ Use real backend ID (IMPORTANT)
             })) || []
           );
         }
@@ -45,8 +45,10 @@ function Trainergrid() {
 
   // ✅ Delete Handler
   const handleDelete = async (row) => {
+
+    console.log(row)
     try {
-      await api.delete(`admin/registration/${row.id}`, {
+      await api.delete(`admin/registration/${row._id}`, {
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
